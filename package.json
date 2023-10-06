@@ -1,0 +1,24 @@
+{
+  "name": "flight",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.18.3",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^8.10.0",
+    "prettier": "^2.8.8",
+    "tsx": "^3.13.0",
+    "typescript": "^4.9.5"
+  }
+}
