@@ -16,6 +16,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/bluebird": "^3.5.39",
+    "@types/fs-extra": "^11.0.2",
     "@types/node": "^18.18.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
@@ -32,7 +33,10 @@
     "axios": "^1.5.1",
     "bluebird": "^3.7.2",
     "dotenv": "^16.3.1",
+    "handlebars": "^4.7.8",
+    "node-color-log": "^10.0.2",
     "node-ssh": "^13.1.0",
+    "pure-uuid": "^1.8.1",
     "yaml": "^2.3.2",
     "znv": "^0.4.0",
     "zod": "^3.22.4"

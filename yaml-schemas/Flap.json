@@ -2,6 +2,123 @@
   "$ref": "#/definitions/Flap",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "ActionChangeCvar": {
+      "additionalProperties": false,
+      "properties": {
+        "cvar": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "const": "change-cvar",
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "path",
+        "cvar",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ActionFileDownload": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "const": "file-download",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "ActionFileUpload": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "template": {
+          "const": true,
+          "type": "boolean"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "const": "file-upload",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "ActionFolderDownload": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "const": "folder-download",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "ActionFolderUpload": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "template": {
+          "const": true,
+          "type": "boolean"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "const": "folder-upload",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
     "Flap": {
       "additionalProperties": false,
       "properties": {
@@ -9,121 +126,19 @@
           "items": {
             "anyOf": [
               {
-                "additionalProperties": false,
-                "properties": {
-                  "from": {
-                    "type": "string"
-                  },
-                  "template": {
-                    "const": true,
-                    "type": "boolean"
-                  },
-                  "to": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "file-upload",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "from",
-                  "to"
-                ],
-                "type": "object"
+                "$ref": "#/definitions/ActionFileUpload"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "from": {
-                    "type": "string"
-                  },
-                  "to": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "file-download",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "from",
-                  "to"
-                ],
-                "type": "object"
+                "$ref": "#/definitions/ActionFileDownload"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "from": {
-                    "type": "string"
-                  },
-                  "template": {
-                    "const": true,
-                    "type": "boolean"
-                  },
-                  "to": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "folder-upload",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "from",
-                  "to"
-                ],
-                "type": "object"
+                "$ref": "#/definitions/ActionFolderUpload"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "from": {
-                    "type": "string"
-                  },
-                  "to": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "folder-download",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "from",
-                  "to"
-                ],
-                "type": "object"
+                "$ref": "#/definitions/ActionFolderDownload"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "cvar": {
-                    "type": "string"
-                  },
-                  "path": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "const": "change-cvar",
-                    "type": "string"
-                  },
-                  "value": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "path",
-                  "cvar",
-                  "value"
-                ],
-                "type": "object"
+                "$ref": "#/definitions/ActionChangeCvar"
               }
             ]
           },
@@ -131,11 +146,111 @@
         },
         "name": {
           "type": "string"
+        },
+        "prompts": {
+          "items": {
+            "$ref": "#/definitions/Prompt"
+          },
+          "type": "array"
         }
       },
       "required": [
         "name",
-        "actions"
+        "actions",
+        "prompts"
+      ],
+      "type": "object"
+    },
+    "Prompt": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PromptInput"
+        },
+        {
+          "$ref": "#/definitions/PromptSelect"
+        },
+        {
+          "$ref": "#/definitions/PromptConfirm"
+        }
+      ]
+    },
+    "PromptConfirm": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "enum": [
+            "true",
+            "false"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "confirm",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "message"
+      ],
+      "type": "object"
+    },
+    "PromptInput": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "input",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "message"
+      ],
+      "type": "object"
+    },
+    "PromptSelect": {
+      "additionalProperties": false,
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "select",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "message",
+        "choices"
       ],
       "type": "object"
     }

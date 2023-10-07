@@ -2,6 +2,12 @@ import * as path from 'node:path';
 import { ConnectedServer } from './types';
 import { FlapWithPath } from './types/Flap';
 import Bluebird from 'bluebird';
+import { loadPrompts } from './loadPrompts';
+
+import { fileUpload } from './actions/fileUpload';
+import { fileDownload } from './actions/fileDownload';
+import { folderUpload } from './actions/folderUpload';
+import { folderDownload } from './actions/folderDownload';
 
 export async function runActions(
   connectedServers: ConnectedServer[],
@@ -13,39 +19,32 @@ export async function runActions(
     await Bluebird.mapSeries(flaps, async (flap) => {
       console.log(`Running flap: ${flap.name}`);
 
-      const flapsPath = path.join(__dirname, '..', '.flights', 'flaps');
+      const promptVars = await loadPrompts(flap.prompts);
+      const flapPath = path.join(
+        __dirname,
+        '..',
+        '.flights',
+        'flaps',
+        flap.path,
+      );
 
       await Bluebird.mapSeries(flap.actions, async (action) => {
         console.log(`Running action: ${action.type}`);
 
         if (action.type === 'file-upload') {
-          const fromPath = path.join(flapsPath, flap.path, action.from);
-
-          console.log(`From: ${fromPath}`);
-          console.log(`To: ${action.to}`);
-
-          await connectedServer.connection.putFile(fromPath, action.to);
+          await fileUpload(action, connectedServer, flapPath, promptVars);
         }
 
         if (action.type === 'file-download') {
-          console.log(`From: ${action.from}`);
-          console.log(`To: ${action.to}`);
-
-          await connectedServer.connection.getFile(action.from, action.to);
+          await fileDownload(action, connectedServer, flapPath);
         }
 
         if (action.type === 'folder-upload') {
-          console.log(`From: ${action.from}`);
-          console.log(`To: ${action.to}`);
-
-          await connectedServer.connection.putDirectory(action.from, action.to);
+          await folderUpload(action, connectedServer, flapPath);
         }
 
         if (action.type === 'folder-download') {
-          console.log(`From: ${action.from}`);
-          console.log(`To: ${action.to}`);
-
-          await connectedServer.connection.getDirectory(action.from, action.to);
+          await folderDownload(action, connectedServer, flapPath);
         }
       });
     });

@@ -1,39 +1,63 @@
+export interface PromptInput {
+  type: 'input';
+  name: string;
+  message: string;
+  default?: string;
+}
+
+export interface PromptSelect {
+  type: 'select';
+  name: string;
+  message: string;
+  choices: string[];
+}
+
+export interface PromptConfirm {
+  type: 'confirm';
+  name: string;
+  message: string;
+  default?: 'true' | 'false';
+}
+
+export type Prompt = PromptInput | PromptSelect | PromptConfirm;
+
 export interface Flap {
   name: string;
   actions: Actions[];
+  prompts: Prompt[];
 }
 
 export interface FlapWithPath extends Flap {
   path: string;
 }
 
-interface ActionFileUpload {
+export interface ActionFileUpload {
   type: 'file-upload';
   from: string;
   to: string;
   template?: true;
 }
 
-interface ActionFileDownload {
+export interface ActionFileDownload {
   type: 'file-download';
   from: string;
   to: string;
 }
 
-interface ActionFolderUpload {
+export interface ActionFolderUpload {
   type: 'folder-upload';
   from: string;
   to: string;
   template?: true;
 }
 
-interface ActionFolderDownload {
+export interface ActionFolderDownload {
   type: 'folder-download';
   from: string;
   to: string;
 }
 
-interface ActionChangeCvar {
+export interface ActionChangeCvar {
   type: 'change-cvar';
   path: string;
   cvar: string;
