@@ -1,0 +1,54 @@
+{
+  "$ref": "#/definitions/Flights",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Flight": {
+      "additionalProperties": false,
+      "properties": {
+        "flaps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "startup_vars": {
+          "items": {
+            "$ref": "#/definitions/StartupVar"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "flaps",
+        "startup_vars"
+      ],
+      "type": "object"
+    },
+    "Flights": {
+      "items": {
+        "$ref": "#/definitions/Flight"
+      },
+      "type": "array"
+    },
+    "StartupVar": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    }
+  }
+}

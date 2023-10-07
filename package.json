@@ -1,24 +1,40 @@
 {
-  "name": "flight",
+  "name": "flights",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "types:flights": "ts-json-schema-generator --path src/types/Flights.ts --type Flights --tsconfig tsconfig.json > yaml-schemas/Flights.json",
+    "types:flaps": "ts-json-schema-generator --path src/types/Flap.ts --type Flap --tsconfig tsconfig.json > yaml-schemas/Flap.json",
+    "types": "pnpm types:flights && pnpm types:flaps"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bluebird": "^3.5.39",
     "@types/node": "^18.18.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^8.10.0",
+    "fs-extra": "^11.1.1",
     "prettier": "^2.8.8",
+    "ts-json-schema-generator": "^1.3.0",
     "tsx": "^3.13.0",
     "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^3.2.0",
+    "axios": "^1.5.1",
+    "bluebird": "^3.7.2",
+    "dotenv": "^16.3.1",
+    "node-ssh": "^13.1.0",
+    "yaml": "^2.3.2",
+    "znv": "^0.4.0",
+    "zod": "^3.22.4"
   }
 }

@@ -1,0 +1,6 @@
+{
+  "yaml.schemas": {
+    "yaml-schemas/Flap.json": ".flights/flaps/**/flap.yaml",
+    "yaml-schemas/Flights.json": ".flights/flights.yaml"
+  }
+}

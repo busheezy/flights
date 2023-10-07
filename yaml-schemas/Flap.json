@@ -1,0 +1,143 @@
+{
+  "$ref": "#/definitions/Flap",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Flap": {
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "template": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "file-upload",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "file-download",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "template": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "folder-upload",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "folder-download",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "from",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "cvar": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "change-cvar",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "path",
+                  "cvar",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "actions"
+      ],
+      "type": "object"
+    }
+  }
+}
