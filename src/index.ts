@@ -1,105 +1,27 @@
-import { ptero } from './ptero';
-import Bluebird from 'bluebird';
-import { PteroServerResponse } from './types/server';
-import { checkbox, confirm, select } from '@inquirer/prompts';
-import * as path from 'node:path';
-import YAML from 'yaml';
-import { Flight } from './types/Flights';
-import { readFile } from 'node:fs/promises';
-import { runFlight } from './flight';
-import { Flap, FlapWithPath } from './types/Flap';
-import { NodeSSH } from 'node-ssh';
-import { ConnectedServer } from './types';
+import { configureServersCmd } from './cmd/configureServers';
+import { deleteConfigCmd } from './cmd/deleteConfig';
+import { updateServersCmd } from './cmd/updateServers';
+import { StartCmdType, getStartCmd } from './prompts/start';
 
-async function getFlights() {
-  const flightsPath = path.join(__dirname, '..', '.flights', 'flights.yaml');
-  const flightsFile = await readFile(flightsPath, 'utf-8');
-  const flights = YAML.parse(flightsFile) as Flight[];
-
-  return flights;
-}
+import './hotkeys';
+import { logger } from './utils/logger';
 
 async function run() {
-  const {
-    data: { data: servers },
-  } = await ptero.get<PteroServerResponse>('');
+  const startCmd = await getStartCmd();
 
-  const flights = await getFlights();
-
-  const serverIdsToRunOn = await checkbox({
-    message: 'Select servers to start',
-    choices: servers.map((server) => ({
-      name: server.attributes.name,
-      value: server.attributes.identifier,
-    })),
-  });
-
-  const restart = await confirm({
-    message: 'Shut down servers?',
-    default: true,
-  });
-
-  const flightSelection = await select({
-    message: 'Select flight to start',
-    choices: flights.map((flight) => ({
-      name: flight.name,
-      value: flight.name,
-    })),
-  });
-
-  console.log();
-
-  const flight = flights.find((flight) => flight.name === flightSelection);
-
-  if (!flight) {
-    throw new Error('Flight not found');
+  if (startCmd === StartCmdType.CONFIGURE_SERVERS) {
+    await configureServersCmd();
   }
 
-  const flapFiles = await Bluebird.map(flight.flaps, async (flapName) => {
-    const flapPath = path.join(
-      __dirname,
-      '..',
-      '.flights',
-      'flaps',
-      `${flapName}/flap.yaml`,
-    );
+  if (startCmd === StartCmdType.UPDATE_SERVERS) {
+    await updateServersCmd();
+  }
 
-    const flapFile = await readFile(flapPath, 'utf-8');
-    const flap = YAML.parse(flapFile) as Flap;
+  if (startCmd === StartCmdType.DELETE_CONFIG) {
+    await deleteConfigCmd();
+  }
 
-    return {
-      ...flap,
-      path: flapName,
-    } as FlapWithPath;
-  });
-
-  const serversToRunOn = serverIdsToRunOn.map((serverId) => {
-    const server = servers.find(
-      (server) => server.attributes.identifier === serverId,
-    );
-
-    if (!server) {
-      throw new Error('Server not found');
-    }
-
-    return server;
-  });
-
-  const connectedServers = await Bluebird.map(
-    serversToRunOn,
-    async (server) => {
-      const ssh = new NodeSSH();
-
-      const connectedServer: ConnectedServer = {
-        server,
-        connection: ssh,
-      };
-
-      return connectedServer;
-    },
-  );
-
-  await runFlight(flight, connectedServers, flapFiles, restart);
+  await run();
 }
 
-run().catch(console.error);
+run().catch(logger.error);

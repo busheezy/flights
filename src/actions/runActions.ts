@@ -1,0 +1,54 @@
+import * as path from 'node:path';
+import { FlapWithPath } from '../types/Flap';
+import Bluebird from 'bluebird';
+
+import { fileUpload } from './fileUpload';
+import { fileDownload } from './fileDownload';
+import { folderUpload } from './folderUpload';
+import { folderDownload } from './folderDownload';
+import { logger } from '../utils/logger';
+import { NodeSSH } from 'node-ssh';
+import { Server } from '../types/ptero/Server';
+import { ServerConfig } from '../types/ServerConfig';
+
+export async function runActions(
+  serverConfig: ServerConfig,
+  server: Server,
+  connection: NodeSSH,
+  flaps: FlapWithPath[],
+) {
+  logger.info(`Running actions on ${server.attributes.name}`);
+
+  await Bluebird.mapSeries(flaps, async (flap) => {
+    logger.info(`Running flap: ${flap.name}`);
+
+    const flapPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '.flights',
+      'flaps',
+      flap.path,
+    );
+
+    await Bluebird.mapSeries(flap.actions, async (action) => {
+      logger.info(`Running action: ${action.type}`);
+
+      if (action.type === 'file-upload') {
+        await fileUpload(action, connection, flapPath, serverConfig.promptVars);
+      }
+
+      if (action.type === 'file-download') {
+        await fileDownload(action, connection, flapPath);
+      }
+
+      if (action.type === 'folder-upload') {
+        await folderUpload(action, connection, flapPath);
+      }
+
+      if (action.type === 'folder-download') {
+        await folderDownload(action, connection, flapPath);
+      }
+    });
+  });
+}

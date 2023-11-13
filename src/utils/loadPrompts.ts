@@ -1,7 +1,7 @@
 import Bluebird from 'bluebird';
 import { input, select, confirm } from '@inquirer/prompts';
-import { Prompt } from './types/Flap';
-import { PromptVars } from './types';
+import { Prompt } from '../types/Flap';
+import { PromptVars } from '../types';
 
 const ENV_PREFIX = 'FLIGHT_';
 

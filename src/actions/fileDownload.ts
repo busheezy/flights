@@ -1,16 +1,17 @@
 import { ActionFileDownload } from '../types/Flap';
 import * as path from 'node:path';
-import { ConnectedServer } from '../types';
+import { logger } from '../utils/logger';
+import { NodeSSH } from 'node-ssh';
 
 export async function fileDownload(
   action: ActionFileDownload,
-  connectedServer: ConnectedServer,
+  connection: NodeSSH,
   flapPath: string,
 ) {
   const toPath = path.join(flapPath, action.to);
 
-  console.log(`From: ${action.from}`);
-  console.log(`To: ${toPath}`);
+  logger.debug(`From: ${action.from}`);
+  logger.debug(`To: ${toPath}`);
 
-  await connectedServer.connection.getFile(action.from, toPath);
+  await connection.getFile(action.from, toPath);
 }
