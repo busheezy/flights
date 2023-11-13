@@ -1,16 +1,17 @@
 import { ActionFolderUpload } from '../types/Flap';
 import * as path from 'node:path';
-import { ConnectedServer } from '../types';
+import { logger } from '../utils/logger';
+import { NodeSSH } from 'node-ssh';
 
 export async function folderUpload(
   action: ActionFolderUpload,
-  connectedServer: ConnectedServer,
+  connection: NodeSSH,
   flapPath: string,
 ) {
   const fromPath = path.join(flapPath, action.from);
 
-  console.log(`From: ${action.from}`);
-  console.log(`To: ${action.to}`);
+  logger.debug(`From: ${action.from}`);
+  logger.debug(`To: ${action.to}`);
 
-  await connectedServer.connection.putDirectory(fromPath, action.to);
+  await connection.putDirectory(fromPath, action.to);
 }

@@ -1,21 +1,23 @@
 import { ActionFileUpload } from '../types/Flap';
 import * as path from 'node:path';
-import { ConnectedServer, PromptVars } from '../types';
+import { PromptVars } from '../types';
 import { getTmpFolder } from '../utils/getTmpFolder';
 import * as fs from 'fs-extra';
 import { template } from '../template';
+import { logger } from '../utils/logger';
+import { NodeSSH } from 'node-ssh';
 
 export async function fileUpload(
   action: ActionFileUpload,
-  connectedServer: ConnectedServer,
+  connection: NodeSSH,
   flapPath: string,
   promptVars: PromptVars,
 ) {
   const fromPath = path.join(flapPath, action.from);
 
-  console.log(`From: ${fromPath}`);
-  console.log(`To: ${action.to}`);
-  console.log(`Template: ${action.template ? 'yes' : 'no'}`);
+  logger.debug(`From: ${fromPath}`);
+  logger.debug(`To: ${action.to}`);
+  logger.debug(`Template: ${action.template ? 'yes' : 'no'}`);
 
   if (action.template) {
     const fromFile = await fs.readFile(fromPath, 'utf-8');
@@ -27,11 +29,8 @@ export async function fileUpload(
     const temporaryTemplatedFilePath = path.join(temporaryFolder, action.from);
     await fs.writeFile(temporaryTemplatedFilePath, templatedFile);
 
-    await connectedServer.connection.putFile(
-      temporaryTemplatedFilePath,
-      action.to,
-    );
+    await connection.putFile(temporaryTemplatedFilePath, action.to);
   } else {
-    await connectedServer.connection.putFile(fromPath, action.to);
+    await connection.putFile(fromPath, action.to);
   }
 }

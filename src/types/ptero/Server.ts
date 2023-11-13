@@ -1,4 +1,4 @@
-export interface PteroServerResponse {
+export interface PteroServersResponse {
   data: Server[];
 }
 

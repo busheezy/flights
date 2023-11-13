@@ -1,7 +1,7 @@
 export interface Flight {
   name: string;
   flaps: string[];
-  startup_vars: StartupVar[];
+  startup_vars?: StartupVar[];
 }
 
 export type Flights = Flight[];
