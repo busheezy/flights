@@ -23,8 +23,7 @@
       },
       "required": [
         "name",
-        "flaps",
-        "startup_vars"
+        "flaps"
       ],
       "type": "object"
     },
