@@ -1,18 +1,26 @@
 import { areYouSure } from '../prompts/confirmAreYouSure';
 import { getServerConfigs } from '../utils/getServerConfigs';
 import { NodeSSH } from 'node-ssh';
-import { changePowerState, getServerStatus, getServers } from '../ptero';
+import {
+  changePowerState,
+  getServerStatus,
+  getServers,
+  sendCmd,
+} from '../ptero';
 import { selectServerConfigs } from '../prompts/selectServerConfigs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import Bluebird from 'bluebird';
 import { env } from '../env';
 import { getFlights } from '../utils/getFlights';
-import { doPowerDown } from '../prompts/confirmAreYouSure copy';
+import { confirmPowerDown } from '../prompts/confirmPowerDown';
 import { runActions } from '../actions/runActions';
 import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
+
+const SHUT_DOWN_MESSAGE =
+  'say The server will restart to apply updates. It should be back immediately.';
 
 export async function updateServersCmd() {
   const serverConfigs = await getServerConfigs();
@@ -23,7 +31,7 @@ export async function updateServersCmd() {
     servers,
   );
 
-  const powerDown = await doPowerDown();
+  const powerDown = await confirmPowerDown();
 
   const sure = await areYouSure();
 
@@ -57,8 +65,13 @@ export async function updateServersCmd() {
 
     let poweredDown = false;
     if (powerDown && status === 'running') {
-      await changePowerState(server.attributes.identifier, 'stop');
       poweredDown = true;
+
+      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+
+      await changePowerState(server.attributes.identifier, 'stop');
     }
 
     const ssh = new NodeSSH();
@@ -70,7 +83,7 @@ export async function updateServersCmd() {
       password: env.PASSWORD,
     });
 
-    if (powerDown) {
+    if (poweredDown) {
       await changePowerState(server.attributes.identifier, 'stop');
     }
 

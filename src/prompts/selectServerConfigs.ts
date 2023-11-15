@@ -28,6 +28,7 @@ export async function selectServerConfigs(
       name: `[${server.attributes.identifier}] ${server.attributes.name}`,
       value: server.attributes.identifier,
     })),
+    loop: false,
   });
 
   return selectedServerConfigs;

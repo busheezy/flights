@@ -1,6 +1,6 @@
 import Bluebird from 'bluebird';
 import * as path from 'node:path';
-import * as fs from 'node:fs/promises';
+import * as fs from 'fs-extra';
 
 import { selectFlight } from '../prompts/selectFlight';
 import { selectServers } from '../prompts/selectServers';
@@ -14,7 +14,7 @@ import { logger } from '../utils/logger';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
-async function getPromptVarsFromFlaps(flaps: FlapWithPath[]) {
+async function getPromptsFromFlaps(flaps: FlapWithPath[]) {
   const prompts: Prompt[] = flaps.reduce(
     (acc: Prompt[], flap: FlapWithPath) => [...acc, ...flap.prompts],
     [],
@@ -25,8 +25,7 @@ async function getPromptVarsFromFlaps(flaps: FlapWithPath[]) {
       index === self.findIndex((p) => p.name === prompt.name),
   );
 
-  const promptVars = await loadPrompts(uniquePrompts);
-  return promptVars;
+  return uniquePrompts;
 }
 
 async function createServerConfig(
@@ -50,14 +49,35 @@ async function createServerConfig(
   await fs.writeFile(serverConfigPath, serverConfigJson);
 }
 
+async function loadServerConfig(
+  identifier: string,
+): Promise<ServerConfig | null> {
+  const serverConfigPath = path.join(serversPath, `${identifier}.json`);
+  const exists = await fs.pathExists(serverConfigPath);
+
+  if (exists) {
+    const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
+    const serverConfig: ServerConfig = JSON.parse(serverConfigJson);
+    return serverConfig;
+  }
+
+  return null;
+}
+
 export async function configureServersCmd() {
   const selectedServers = await selectServers();
 
   await Bluebird.mapSeries(selectedServers, async (server) => {
+    logger.info(
+      `Configuring: ${server.attributes.name} - ${server.attributes.node}`,
+    );
+
+    const serverConfig = await loadServerConfig(server.attributes.identifier);
+
     const flight = await selectFlight();
     const flapsWithPath = await getFlapsWithPathsFromFlight(flight);
-    logger.info(`Configuring: ${server.attributes.name}`);
-    const promptVars = await getPromptVarsFromFlaps(flapsWithPath);
+    const prompts = await getPromptsFromFlaps(flapsWithPath);
+    const promptVars = await loadPrompts(prompts, serverConfig);
     await createServerConfig(server, flight.name, promptVars);
   });
 }

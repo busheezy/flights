@@ -11,6 +11,7 @@ export async function selectServers(): Promise<Server[]> {
       name: server.attributes.name,
       value: server.attributes.identifier,
     })),
+    loop: false,
   });
 
   const selectedServers = servers.filter((server) =>
