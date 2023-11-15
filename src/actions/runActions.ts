@@ -17,10 +17,8 @@ export async function runActions(
   connection: NodeSSH,
   flaps: FlapWithPath[],
 ) {
-  logger.info(`Running actions on ${server.attributes.name}`);
-
   await Bluebird.mapSeries(flaps, async (flap) => {
-    logger.info(`Running flap: ${flap.name}`);
+    logger.log(`Running flap: ${flap.name} on ${server.attributes.name}`);
 
     const flapPath = path.join(
       __dirname,
@@ -32,7 +30,7 @@ export async function runActions(
     );
 
     await Bluebird.mapSeries(flap.actions, async (action) => {
-      logger.info(`Running action: ${action.type}`);
+      logger.debug(`Running action: ${action.type}`);
 
       if (action.type === 'file-upload') {
         await fileUpload(action, connection, flapPath, serverConfig.promptVars);

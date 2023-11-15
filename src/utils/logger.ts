@@ -1,6 +1,12 @@
 import colorLogger from 'node-color-log';
 
+colorLogger.setDate(() => '');
+colorLogger.level = 'info';
+
 export const logger = {
+  log: (...message: unknown[]) => {
+    colorLogger.log(...message);
+  },
   info: (...message: unknown[]) => {
     colorLogger.info(...message);
   },
@@ -8,6 +14,6 @@ export const logger = {
     colorLogger.debug(...message);
   },
   error: (...message: unknown[]) => {
-    console.log(...message);
+    console.error(...message);
   },
 };

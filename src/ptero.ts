@@ -49,9 +49,7 @@ export async function getServerStatus(identifier: string) {
 }
 
 export async function sendCmd(identifier: string, cmd: string) {
-  const { data } = await ptero.post(`/servers/${identifier}/command`, {
+  await ptero.post(`/servers/${identifier}/command`, {
     command: cmd,
   });
-
-  console.log(data);
 }
