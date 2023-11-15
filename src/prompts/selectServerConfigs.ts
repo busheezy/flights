@@ -1,34 +1,42 @@
 import { checkbox } from '@inquirer/prompts';
 import { ServerConfig } from '../types/ServerConfig';
-import Bluebird from 'bluebird';
 import { Server } from '../types/ptero/Server';
+import { sortServersByName } from '../utils/sortServersByName';
 
 export async function selectServerConfigs(
   serverConfigs: ServerConfig[],
   servers: Server[],
 ) {
-  const serversWithConfigs = await Bluebird.mapSeries(
-    serverConfigs,
-    async (serverConfig) => {
-      const foundServer = servers.find(
-        (server) => server.attributes.identifier === serverConfig.identifier,
-      );
+  const serverConfigsThatHaveServer = serverConfigs.filter((serverConfig) => {
+    const foundServer = servers.some(
+      (server) => server.attributes.identifier === serverConfig.identifier,
+    );
 
-      if (!foundServer) {
-        throw new Error('Server not found');
-      }
+    return foundServer;
+  });
 
-      return foundServer;
-    },
-  );
+  const serversWithConfigs = serverConfigsThatHaveServer.map((serverConfig) => {
+    const foundServer = servers.find(
+      (server) => server.attributes.identifier === serverConfig.identifier,
+    );
+
+    if (!foundServer) {
+      throw new Error('Server not found');
+    }
+
+    return foundServer;
+  });
+
+  const sortedServers = sortServersByName(serversWithConfigs);
 
   const selectedServerConfigs = await checkbox({
-    message: 'Select server config to delete:',
-    choices: serversWithConfigs.map((server) => ({
-      name: `[${server.attributes.identifier}] ${server.attributes.name}`,
+    message: 'Select server config:',
+    choices: sortedServers.map((server) => ({
+      name: server.attributes.name,
       value: server.attributes.identifier,
     })),
     loop: false,
+    pageSize: 15,
   });
 
   return selectedServerConfigs;
