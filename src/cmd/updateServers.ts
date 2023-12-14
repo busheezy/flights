@@ -16,6 +16,8 @@ import { getFlights } from '../utils/getFlights';
 import { confirmPowerDown } from '../prompts/confirmPowerDown';
 import { runActions } from '../actions/runActions';
 import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
+import { logger } from '../utils/logger';
+import promiseRetry from 'promise-retry';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -65,32 +67,39 @@ export async function updateServersCmd() {
 
     let poweredDown = false;
     if (powerDown && status === 'running') {
+      logger.info(`Powering down ${server.attributes.identifier}!`);
+
       poweredDown = true;
 
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+      await Bluebird.delay(1000);
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+      await Bluebird.delay(1000);
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
+      await Bluebird.delay(3000);
 
       await changePowerState(server.attributes.identifier, 'stop');
+      await Bluebird.delay(1000);
     }
 
     const ssh = new NodeSSH();
 
-    const connection = await ssh.connect({
-      host: server.attributes.sftp_details.ip,
-      port: server.attributes.sftp_details.port,
-      username: `${env.USERNAME}.${server.attributes.identifier}`,
-      password: env.PASSWORD,
+    const connection = await promiseRetry(async (retry) => {
+      return await ssh
+        .connect({
+          host: server.attributes.sftp_details.ip,
+          port: server.attributes.sftp_details.port,
+          username: `${env.USERNAME}.${server.attributes.identifier}`,
+          password: env.PASSWORD,
+        })
+        .catch(retry);
     });
-
-    if (poweredDown) {
-      await changePowerState(server.attributes.identifier, 'stop');
-    }
 
     const flaps = await getFlapsWithPathsFromFlight(flight);
     await runActions(serverConfig, server, connection, flaps);
 
     if (poweredDown) {
+      logger.info(`Powering up ${server.attributes.identifier}!`);
       await changePowerState(server.attributes.identifier, 'start');
     }
   });

@@ -36,7 +36,6 @@ export async function selectServerConfigs(
       value: server.attributes.identifier,
     })),
     loop: false,
-    pageSize: 15,
   });
 
   return selectedServerConfigs;

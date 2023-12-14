@@ -1,9 +1,10 @@
-import axios from 'axios';
+import axios, { Axios, isAxiosError } from 'axios';
 import { env } from './env';
 import Bluebird from 'bluebird';
 import { StartupVar } from './types/Flights';
 import { PteroServersResponse } from './types/ptero/Server';
 import { PteroServerResources } from './types/ptero/ServerResources';
+import axiosRetry from 'axios-retry';
 
 export const ptero = axios.create({
   baseURL: `${env.PTERO_URL}/api/client`,
@@ -14,18 +15,29 @@ export const ptero = axios.create({
   },
 });
 
+axiosRetry(ptero, {
+  retries: 10,
+  retryDelay: axiosRetry.exponentialDelay,
+  onRetry(retryCount, error, requestConfig) {
+    console.log(
+      `Retry attempt #${retryCount} for ${requestConfig.url}: ${error.message}`,
+    );
+  },
+});
+
 export async function updateVars(
   identifier: string,
   startupVars: StartupVar[],
 ) {
-  await Bluebird.map(startupVars, async (startupVar) => {
+  await Bluebird.mapSeries(startupVars, async (startupVar) => {
     await ptero.put(`/servers/${identifier}/startup/variable`, startupVar);
+    await Bluebird.delay(1000);
   });
 }
 
 export async function changePowerState(
   identifier: string,
-  state: 'start' | 'stop' | 'restart | kill',
+  state: 'start' | 'stop' | 'restart' | 'kill',
 ) {
   await ptero.post(`/servers/${identifier}/power`, {
     signal: state,

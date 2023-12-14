@@ -14,7 +14,6 @@ export async function selectServers(): Promise<Server[]> {
       value: server.attributes.identifier,
     })),
     loop: false,
-    pageSize: 15,
   });
 
   const selectedServers = sortedServers.filter((server) =>
