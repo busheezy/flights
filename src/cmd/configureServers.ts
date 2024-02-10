@@ -74,7 +74,7 @@ export async function configureServersCmd() {
 
     const serverConfig = await loadServerConfig(server.attributes.identifier);
 
-    const flight = await selectFlight();
+    const flight = await selectFlight(serverConfig);
     const flapsWithPath = await getFlapsWithPathsFromFlight(flight);
     const prompts = await getPromptsFromFlaps(flapsWithPath);
     const promptVars = await loadPrompts(prompts, serverConfig);

@@ -3,6 +3,7 @@ import YAML from 'yaml';
 import { readFile } from 'node:fs/promises';
 import { Flight } from '../types/Flights';
 import { select } from '@inquirer/prompts';
+import { ServerConfig } from '../types/ServerConfig';
 
 async function getFlights() {
   const flightsPath = path.join(
@@ -18,15 +19,24 @@ async function getFlights() {
   return flights;
 }
 
-export async function selectFlight(): Promise<Flight> {
+export async function selectFlight(
+  serverConfig: ServerConfig | null,
+): Promise<Flight> {
   const flights = await getFlights();
 
   const flightSelection = await select({
     message: 'Select flight:',
-    choices: flights.map((flight) => ({
-      name: flight.name,
-      value: flight.name,
-    })),
+    choices: flights.map((flight) => {
+      const selected = serverConfig?.flightName === flight.name;
+
+      console.log(selected, flight.name, serverConfig?.flightName);
+
+      return {
+        name: flight.name,
+        value: flight.name,
+        selected,
+      };
+    }),
   });
 
   const flight = flights.find((flight) => flight.name === flightSelection);
