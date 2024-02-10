@@ -6,6 +6,7 @@ import {
   getServerStatus,
   getServers,
   sendCmd,
+  updateVars,
 } from '../ptero';
 import { selectServerConfigs } from '../prompts/selectServerConfigs';
 import * as fs from 'node:fs/promises';
@@ -18,6 +19,7 @@ import { runActions } from '../actions/runActions';
 import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
 import { logger } from '../utils/logger';
 import promiseRetry from 'promise-retry';
+import { ServerConfig } from '../types/ServerConfig';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -44,7 +46,7 @@ export async function updateServersCmd() {
   await Bluebird.mapSeries(selectedServerConfigs, async (serverConfigName) => {
     const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
     const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
-    const serverConfig = JSON.parse(serverConfigJson);
+    const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
 
     const server = servers.find(
       (s) => s.attributes.identifier === serverConfigName,
@@ -97,6 +99,9 @@ export async function updateServersCmd() {
 
     const flaps = await getFlapsWithPathsFromFlight(flight);
     await runActions(serverConfig, server, connection, flaps);
+
+    const startupVars = flight.startup_vars ?? [];
+    await updateVars(serverConfig.identifier, startupVars);
 
     if (poweredDown) {
       logger.info(`Powering up ${server.attributes.identifier}!`);

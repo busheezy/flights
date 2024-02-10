@@ -24,4 +24,8 @@ async function run() {
   await run();
 }
 
-run().catch(logger.error);
+run().catch((err) => {
+  logger.error('Caught error in main run. Exiting.');
+  logger.error(err);
+  process.exit(1);
+});
