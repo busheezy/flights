@@ -27,16 +27,12 @@ export async function selectFlight(
   const flightSelection = await select({
     message: 'Select flight:',
     choices: flights.map((flight) => {
-      const selected = serverConfig?.flightName === flight.name;
-
-      console.log(selected, flight.name, serverConfig?.flightName);
-
       return {
         name: flight.name,
         value: flight.name,
-        selected,
       };
     }),
+    default: serverConfig?.flightName,
   });
 
   const flight = flights.find((flight) => flight.name === flightSelection);

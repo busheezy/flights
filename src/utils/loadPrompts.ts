@@ -31,8 +31,8 @@ export async function loadPrompts(
         message: prompt.message,
         choices: prompt.choices.map((choice) => ({
           value: choice,
-          default: priorValue === choice ? true : undefined,
         })),
+        default: priorValue,
       });
 
       promptVars[`${ENV_PREFIX}${prompt.name}`] = response;
