@@ -3,8 +3,11 @@ export interface PteroServerResources {
   attributes: ServerResourcesAttributes;
 }
 
+export type PteroPowerSignal = 'start' | 'stop' | 'restart' | 'kill';
+export type PteroPowerState = 'running' | 'stopping' | 'offline' | 'starting';
+
 export interface ServerResourcesAttributes {
-  current_state: string;
+  current_state: PteroPowerState;
   is_suspended: boolean;
   resources: Resources;
 }

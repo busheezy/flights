@@ -2,10 +2,9 @@ import { areYouSure } from '../prompts/confirmAreYouSure';
 import { getServerConfigs } from '../utils/getServerConfigs';
 import { NodeSSH } from 'node-ssh';
 import {
-  changePowerState,
   getServerStatus,
   getServers,
-  sendCmd,
+  sendPowerSignalAndWaitForPowerState,
   updateVars,
 } from '../ptero';
 import { selectServerConfigs } from '../prompts/selectServerConfigs';
@@ -16,16 +15,12 @@ import { getFlights } from '../utils/getFlights';
 import { confirmPowerDown } from '../prompts/confirmPowerDown';
 import { runActions } from '../actions/runActions';
 import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
-import { logger } from '../utils/logger';
 import promiseRetry from 'promise-retry';
 import { ServerConfig } from '../types/ServerConfig';
 import pMapSeries from 'p-map-series';
 import { delay } from '../utils/delay';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
-
-const SHUT_DOWN_MESSAGE =
-  'say The server will restart to apply updates. It should be back immediately.';
 
 export async function updateServersCmd() {
   const serverConfigs = await getServerConfigs();
@@ -70,18 +65,14 @@ export async function updateServersCmd() {
 
     let poweredDown = false;
     if (powerDown && status === 'running') {
-      logger.info(`Powering down ${server.attributes.identifier}!`);
-
       poweredDown = true;
 
-      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await delay(1000);
-      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await delay(1000);
-      await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await delay(3000);
+      await sendPowerSignalAndWaitForPowerState(
+        server.attributes.identifier,
+        'stop',
+        'offline',
+      );
 
-      await changePowerState(server.attributes.identifier, 'stop');
       await delay(1000);
     }
 
@@ -105,8 +96,11 @@ export async function updateServersCmd() {
     await updateVars(serverConfig.identifier, startupVars);
 
     if (poweredDown) {
-      logger.info(`Powering up ${server.attributes.identifier}!`);
-      await changePowerState(server.attributes.identifier, 'start');
+      await sendPowerSignalAndWaitForPowerState(
+        server.attributes.identifier,
+        'start',
+        'running',
+      );
     }
   });
 }

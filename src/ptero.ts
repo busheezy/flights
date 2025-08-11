@@ -2,10 +2,15 @@ import axios, { Axios, isAxiosError } from 'axios';
 import { env } from './env';
 import { StartupVar } from './types/Flights';
 import { PteroServersResponse } from './types/ptero/Server';
-import { PteroServerResources } from './types/ptero/ServerResources';
+import {
+  PteroPowerSignal,
+  PteroPowerState,
+  PteroServerResources,
+} from './types/ptero/ServerResources';
 import axiosRetry from 'axios-retry';
 import pMapSeries from 'p-map-series';
 import { delay } from './utils/delay';
+import { logger } from './utils/logger';
 
 export const ptero = axios.create({
   baseURL: `${env.PTERO_URL}/api/client`,
@@ -36,12 +41,9 @@ export async function updateVars(
   });
 }
 
-export async function changePowerState(
-  identifier: string,
-  state: 'start' | 'stop' | 'restart' | 'kill',
-) {
+async function sendPowerSignal(identifier: string, signal: PteroPowerSignal) {
   await ptero.post(`/servers/${identifier}/power`, {
-    signal: state,
+    signal,
   });
 }
 
@@ -65,4 +67,38 @@ export async function sendCmd(identifier: string, cmd: string) {
   await ptero.post(`/servers/${identifier}/command`, {
     command: cmd,
   });
+}
+
+export async function sendPowerSignalAndWaitForPowerState(
+  identifier: string,
+  powerSignal: PteroPowerSignal,
+  powerStateToWaitFor: PteroPowerState,
+) {
+  await sendPowerSignal(identifier, powerSignal);
+
+  let attempts = 0;
+
+  async function checkServerState() {
+    attempts++;
+
+    if (attempts > 12) {
+      throw new Error(
+        `Failed to reach power state ${powerStateToWaitFor} for server ${identifier} after 12 attempts`,
+      );
+    }
+
+    const currentState = await getServerStatus(identifier);
+
+    logger.log(`Current state of server ${identifier}: ${currentState}`);
+
+    if (currentState === powerStateToWaitFor) {
+      logger.log(`Server ${identifier} is now in state ${powerStateToWaitFor}`);
+      return;
+    }
+
+    await delay(5_000);
+    await checkServerState();
+  }
+
+  await checkServerState();
 }
