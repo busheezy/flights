@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { ServerConfig } from '../types/ServerConfig';
-import Bluebird from 'bluebird';
+import pMapSeries from 'p-map-series';
 
 const serverConfigsPath = path.join(
   __dirname,
@@ -14,7 +14,7 @@ const serverConfigsPath = path.join(
 export async function getServerConfigs(): Promise<ServerConfig[]> {
   const serverConfigsPaths = await fs.readdir(serverConfigsPath);
 
-  const serverConfigs = await Bluebird.mapSeries(
+  const serverConfigs = await pMapSeries(
     serverConfigsPaths,
     async (serverConfigPath) => {
       const serverConfig = await fs.readFile(

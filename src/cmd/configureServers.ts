@@ -1,4 +1,3 @@
-import Bluebird from 'bluebird';
 import * as path from 'node:path';
 import * as fs from 'fs-extra';
 
@@ -11,6 +10,7 @@ import { Server } from '../types/ptero/Server';
 import { PromptVars } from '../types';
 import { ServerConfig } from '../types/ServerConfig';
 import { logger } from '../utils/logger';
+import pMapSeries from 'p-map-series';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -67,7 +67,7 @@ async function loadServerConfig(
 export async function configureServersCmd() {
   const selectedServers = await selectServers();
 
-  await Bluebird.mapSeries(selectedServers, async (server) => {
+  await pMapSeries(selectedServers, async (server) => {
     logger.info(
       `Configuring: ${server.attributes.name} - ${server.attributes.node}`,
     );

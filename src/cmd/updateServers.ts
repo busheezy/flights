@@ -11,7 +11,6 @@ import {
 import { selectServerConfigs } from '../prompts/selectServerConfigs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import Bluebird from 'bluebird';
 import { env } from '../env';
 import { getFlights } from '../utils/getFlights';
 import { confirmPowerDown } from '../prompts/confirmPowerDown';
@@ -20,6 +19,8 @@ import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
 import { logger } from '../utils/logger';
 import promiseRetry from 'promise-retry';
 import { ServerConfig } from '../types/ServerConfig';
+import pMapSeries from 'p-map-series';
+import { delay } from '../utils/delay';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -43,7 +44,7 @@ export async function updateServersCmd() {
     return;
   }
 
-  await Bluebird.mapSeries(selectedServerConfigs, async (serverConfigName) => {
+  await pMapSeries(selectedServerConfigs, async (serverConfigName) => {
     const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
     const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
     const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
@@ -74,14 +75,14 @@ export async function updateServersCmd() {
       poweredDown = true;
 
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await Bluebird.delay(1000);
+      await delay(1000);
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await Bluebird.delay(1000);
+      await delay(1000);
       await sendCmd(server.attributes.identifier, SHUT_DOWN_MESSAGE);
-      await Bluebird.delay(3000);
+      await delay(3000);
 
       await changePowerState(server.attributes.identifier, 'stop');
-      await Bluebird.delay(1000);
+      await delay(1000);
     }
 
     const ssh = new NodeSSH();

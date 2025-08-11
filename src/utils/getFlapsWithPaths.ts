@@ -1,11 +1,11 @@
-import Bluebird from 'bluebird';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Flap, FlapWithPath } from '../types/Flap';
 import YAML from 'yaml';
+import pMap from 'p-map';
 
 export async function getFlapsWithPaths(flapNames: string[]) {
-  const flapFiles = await Bluebird.map(flapNames, async (flapName) => {
+  const flapFiles = await pMap(flapNames, async (flapName) => {
     const flapPath = path.join(
       __dirname,
       '..',

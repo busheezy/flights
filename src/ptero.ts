@@ -1,10 +1,11 @@
 import axios, { Axios, isAxiosError } from 'axios';
 import { env } from './env';
-import Bluebird from 'bluebird';
 import { StartupVar } from './types/Flights';
 import { PteroServersResponse } from './types/ptero/Server';
 import { PteroServerResources } from './types/ptero/ServerResources';
 import axiosRetry from 'axios-retry';
+import pMapSeries from 'p-map-series';
+import { delay } from './utils/delay';
 
 export const ptero = axios.create({
   baseURL: `${env.PTERO_URL}/api/client`,
@@ -29,9 +30,9 @@ export async function updateVars(
   identifier: string,
   startupVars: StartupVar[],
 ) {
-  await Bluebird.mapSeries(startupVars, async (startupVar) => {
+  await pMapSeries(startupVars, async (startupVar) => {
     await ptero.put(`/servers/${identifier}/startup/variable`, startupVar);
-    await Bluebird.delay(1000);
+    await delay(1000);
   });
 }
 

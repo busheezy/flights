@@ -1,8 +1,8 @@
-import Bluebird from 'bluebird';
 import { input, select, confirm } from '@inquirer/prompts';
 import { Prompt } from '../types/Flap';
 import { PromptVars } from '../types';
 import { ServerConfig } from '../types/ServerConfig';
+import pMapSeries from 'p-map-series';
 
 const ENV_PREFIX = 'FLIGHT_';
 
@@ -12,7 +12,7 @@ export async function loadPrompts(
 ): Promise<PromptVars> {
   const promptVars: PromptVars = {};
 
-  await Bluebird.mapSeries(prompts, async (prompt) => {
+  await pMapSeries(prompts, async (prompt) => {
     const priorValue = serverConfig
       ? serverConfig.promptVars[`${ENV_PREFIX}${prompt.name}`]
       : null;
