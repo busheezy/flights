@@ -79,6 +79,10 @@ export async function sendPowerSignalAndWaitForPowerState(
   let attempts = 0;
 
   async function checkServerState() {
+    if (attempts == 0) {
+      logger.log(`Setting ${identifier} to ${powerStateToWaitFor}`);
+    }
+
     attempts++;
 
     if (attempts > 12) {
@@ -88,8 +92,6 @@ export async function sendPowerSignalAndWaitForPowerState(
     }
 
     const currentState = await getServerStatus(identifier);
-
-    logger.log(`Current state of server ${identifier}: ${currentState}`);
 
     if (currentState === powerStateToWaitFor) {
       logger.log(`Server ${identifier} is now in state ${powerStateToWaitFor}`);
