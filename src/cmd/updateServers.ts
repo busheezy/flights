@@ -18,8 +18,8 @@ import { runActions } from '../actions/runActions';
 import { getFlapsWithPathsFromFlight } from '../utils/getFlapsFromFlight';
 import promiseRetry from 'promise-retry';
 import { ServerConfig } from '../types/ServerConfig';
-import pMapSeries from 'p-map-series';
 import { delay } from '../utils/delay';
+import pMap from 'p-map';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -52,7 +52,7 @@ export async function updateServersCmd() {
     return;
   }
 
-  await pMapSeries(selectedServerConfigs, async (serverConfigName) => {
+  await pMap(selectedServerConfigs, async (serverConfigName) => {
     const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
     const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
     const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
