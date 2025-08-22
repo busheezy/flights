@@ -20,17 +20,13 @@ import promiseRetry from 'promise-retry';
 import { ServerConfig } from '../types/ServerConfig';
 import { delay } from '../utils/delay';
 import pMap from 'p-map';
+import pMapSeries from 'p-map-series';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
 const WARNING_MESSAGE_COMMAND = 'say The server will restart to apply changes.';
 
 async function sendPowerOffNotification(serverIdentifier: string) {
-  await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
-  await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
-  await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
-  await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
-  await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
   await sendCmd(serverIdentifier, WARNING_MESSAGE_COMMAND);
   await delay(5000);
 }
@@ -52,7 +48,7 @@ export async function updateServersCmd() {
     return;
   }
 
-  await pMap(selectedServerConfigs, async (serverConfigName) => {
+  await pMapSeries(selectedServerConfigs, async (serverConfigName) => {
     const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
     const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
     const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
