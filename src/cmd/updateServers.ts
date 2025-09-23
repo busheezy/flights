@@ -20,7 +20,6 @@ import promiseRetry from 'promise-retry';
 import { ServerConfig } from '../types/ServerConfig';
 import { delay } from '../utils/delay';
 import pMap from 'p-map';
-import pMapSeries from 'p-map-series';
 
 const serversPath = path.join(__dirname, '..', '..', '.flights', 'servers');
 
@@ -34,6 +33,8 @@ async function sendPowerOffNotification(serverIdentifier: string) {
 export async function updateServersCmd() {
   const serverConfigs = await getServerConfigs();
   const servers = await getServers();
+  const serverIndex = new Map(servers.map((s) => [s.attributes.identifier, s]));
+  const flights = await getFlights();
 
   const selectedServerConfigs = await selectServerConfigs(
     serverConfigs,
@@ -48,70 +49,70 @@ export async function updateServersCmd() {
     return;
   }
 
-  await pMapSeries(selectedServerConfigs, async (serverConfigName) => {
-    const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
-    const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
-    const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
+  await pMap(
+    selectedServerConfigs,
+    async (serverConfigName) => {
+      const serverConfigPath = path.join(serversPath, `${serverConfigName}.json`);
+      const serverConfigJson = await fs.readFile(serverConfigPath, 'utf-8');
+      const serverConfig = JSON.parse(serverConfigJson) as ServerConfig;
 
-    const server = servers.find(
-      (s) => s.attributes.identifier === serverConfigName,
-    );
+      const server = serverIndex.get(serverConfigName);
 
-    if (!server) {
-      throw new Error(`Server with name ${serverConfigName} not found.`);
-    }
+      if (!server) {
+        throw new Error(`Server with name ${serverConfigName} not found.`);
+      }
 
-    const status = await getServerStatus(server.attributes.identifier);
+      let poweredDown = false;
 
-    const flights = await getFlights();
-    const flight = flights.find(
-      (flight) => flight.name === serverConfig.flightName,
-    );
+      if (powerDown) {
+        const status = await getServerStatus(server.attributes.identifier);
+        if (status === 'running') {
+          poweredDown = true;
+          await sendPowerOffNotification(server.attributes.identifier);
+          await sendPowerSignalAndWaitForPowerState(
+            server.attributes.identifier,
+            'stop',
+            'offline',
+          );
+          await delay(1000);
+        }
+      }
 
-    if (!flight) {
-      throw new Error(`Flight with name ${serverConfig.flightName} not found.`);
-    }
+      const flight = flights.find((f) => f.name === serverConfig.flightName);
 
-    let poweredDown = false;
-    if (powerDown && status === 'running') {
-      poweredDown = true;
+      if (!flight) {
+        throw new Error(`Flight with name ${serverConfig.flightName} not found.`);
+      }
 
-      await sendPowerOffNotification(server.attributes.identifier);
+      const ssh = new NodeSSH();
 
-      await sendPowerSignalAndWaitForPowerState(
-        server.attributes.identifier,
-        'stop',
-        'offline',
-      );
+      const connection = await promiseRetry(async (retry) => {
+        return await ssh
+          .connect({
+            host: server.attributes.sftp_details.ip,
+            port: server.attributes.sftp_details.port,
+            username: `${env.USERNAME}.${server.attributes.identifier}`,
+            password: env.PASSWORD,
+          })
+          .catch(retry);
+      });
 
-      await delay(1000);
-    }
+      const flaps = await getFlapsWithPathsFromFlight(flight);
+      await runActions(serverConfig, server, connection, flaps);
 
-    const ssh = new NodeSSH();
+      const startupVars = flight.startup_vars ?? [];
+      await updateVars(serverConfig.identifier, startupVars);
 
-    const connection = await promiseRetry(async (retry) => {
-      return await ssh
-        .connect({
-          host: server.attributes.sftp_details.ip,
-          port: server.attributes.sftp_details.port,
-          username: `${env.USERNAME}.${server.attributes.identifier}`,
-          password: env.PASSWORD,
-        })
-        .catch(retry);
-    });
-
-    const flaps = await getFlapsWithPathsFromFlight(flight);
-    await runActions(serverConfig, server, connection, flaps);
-
-    const startupVars = flight.startup_vars ?? [];
-    await updateVars(serverConfig.identifier, startupVars);
-
-    if (poweredDown) {
-      await sendPowerSignalAndWaitForPowerState(
-        server.attributes.identifier,
-        'start',
-        'running',
-      );
-    }
-  });
+      if (poweredDown) {
+        await sendPowerSignalAndWaitForPowerState(
+          server.attributes.identifier,
+          'start',
+          'running',
+        );
+      }
+    },
+    {
+      concurrency: 5,
+    },
+  );
 }

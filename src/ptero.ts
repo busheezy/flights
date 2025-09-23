@@ -11,6 +11,8 @@ import axiosRetry from 'axios-retry';
 import pMapSeries from 'p-map-series';
 import { delay } from './utils/delay';
 import { logger } from './utils/logger';
+import axiosThrottle from 'axios-request-throttle';
+
 
 export const ptero = axios.create({
   baseURL: `${env.PTERO_URL}/api/client`,
@@ -20,6 +22,8 @@ export const ptero = axios.create({
     Accept: 'Application/vnd.pterodactyl.v1+json',
   },
 });
+
+axiosThrottle.use(ptero, { requestsPerSecond: 1 });
 
 axiosRetry(ptero, {
   retries: 10,
@@ -87,7 +91,7 @@ export async function sendPowerSignalAndWaitForPowerState(
 
     if (attempts > 12) {
       throw new Error(
-        `Failed to reach power state ${powerStateToWaitFor} for server ${identifier} after 12 attempts`,
+        `Failed to reach power state ${powerStateToWaitFor} for server ${identifier} after ${attempts} attempts`,
       );
     }
 
